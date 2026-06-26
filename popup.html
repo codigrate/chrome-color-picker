@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Codigrate Color Picker</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+<div class="container">
+  <h1>Color Picker</h1>
+  <p class="subtle">Pick any color on your screen with the eyedropper, then copy it as HEX, RGB or HSL.</p>
+
+  <!-- Shown only when the All In One Themes extension is installed and reports an
+       active Codigrate browser theme. The picker tints itself to that theme and
+       offers its palette. -->
+  <section id="themeMatch" class="theme-match hidden">
+    <div class="tm-head">
+      <span class="tm-dot" id="tmDot" aria-hidden="true"></span>
+      <span class="tm-name" id="tmName"></span>
+      <span class="tm-tag">your Chrome theme</span>
+    </div>
+    <div class="tm-row" id="tmRow"></div>
+  </section>
+
+  <button id="pick" class="pick-btn" type="button">
+    <svg class="ic" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M19.1 4.9a2.1 2.1 0 0 0-3 0l-2.2 2.2-1-1-1.5 1.5 1 1L4 16l-1 4 4-1 7.4-7.4 1 1 1.5-1.5-1-1 2.2-2.2a2.1 2.1 0 0 0 0-3z"
+            fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+    </svg>
+    Pick a Color
+  </button>
+
+  <p id="unsupported" class="unsupported hidden">
+    Your browser does not support the eyedropper. Please update Chrome to the latest version.
+  </p>
+
+  <section id="result" class="result hidden">
+    <div class="swatch" id="swatch"></div>
+
+    <div class="values">
+      <button class="val" type="button" data-key="hex">
+        <span class="k">HEX</span>
+        <span class="v" id="hex"></span>
+        <span class="copy-hint">Copy</span>
+      </button>
+      <button class="val" type="button" data-key="rgb">
+        <span class="k">RGB</span>
+        <span class="v" id="rgb"></span>
+        <span class="copy-hint">Copy</span>
+      </button>
+      <button class="val" type="button" data-key="hsl">
+        <span class="k">HSL</span>
+        <span class="v" id="hsl"></span>
+        <span class="copy-hint">Copy</span>
+      </button>
+    </div>
+
+    <a id="openCodigrate" class="link cdg-link" target="_blank" rel="noopener">
+      Open in Codigrate
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"
+        fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+  </section>
+
+  <section class="history">
+    <div class="info-title">Recents</div>
+    <div id="historyRow" class="h-row"></div>
+  </section>
+
+  <div class="row">
+    <p class="info-text">made by </p>
+    <a class="link" target="_blank" href="https://codigrate.com">
+      <span>Codigrate</span>
+      <img src="images/codigrate-logo.png" class="footer-logo" alt="Codigrate logo">
+    </a>
+  </div>
+</div>
+
+<script src="popup.js"></script>
+</body>
+</html>
