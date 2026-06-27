@@ -41,10 +41,6 @@ const rgbEl = document.getElementById('rgb');
 const hslEl = document.getElementById('hsl');
 const openLink = document.getElementById('openCodigrate');
 const historyRow = document.getElementById('historyRow');
-const themeMatch = document.getElementById('themeMatch');
-const tmDot = document.getElementById('tmDot');
-const tmName = document.getElementById('tmName');
-const tmRow = document.getElementById('tmRow');
 
 // ---- colour maths -----------------------------------------------------------
 
@@ -79,30 +75,15 @@ function luminance(hex) {
 
 // ---- All In One Themes integration (read-only) ------------------------------
 
-// Curated, colour-forward slots from the theme's preview palette.
-const THEME_SLOTS = ['accent', 'frame', 'toolbar', 'omnibox', 'activeTab', 'border'];
-
+// Tint the picker's accent (Pick button hover, link colour, copied hint, etc.)
+// to the active Codigrate browser theme. No separate theme card is shown — the
+// popup's own UI simply follows the theme.
 function applyThemeMatch(resp) {
   const p = resp.palette || {};
   if (p.accent) {
     document.documentElement.style.setProperty('--accent', p.accent);
     document.documentElement.style.setProperty('--accent-ink', luminance(p.accent) > 0.62 ? '#0F172A' : '#FFFFFF');
-    tmDot.style.background = p.accent;
   }
-  tmName.textContent = resp.name || 'Codigrate theme';
-  tmRow.textContent = '';
-  THEME_SLOTS.forEach((slot) => {
-    const hex = p[slot];
-    if (!hex) { return; }
-    const chip = document.createElement('button');
-    chip.type = 'button';
-    chip.className = 'tm-chip';
-    chip.style.background = hex;
-    chip.title = slot + ' ' + hex.toUpperCase();
-    chip.addEventListener('click', () => show(hex));
-    tmRow.appendChild(chip);
-  });
-  themeMatch.classList.remove('hidden');
 }
 
 function loadThemeMatch() {

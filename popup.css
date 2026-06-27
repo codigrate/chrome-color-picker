@@ -29,47 +29,6 @@ h1 { margin: 0; font-size: 20px; font-weight: 800; color: var(--ink); }
   line-height: 1.5;
 }
 
-/* ---- matched Codigrate theme ---- */
-.theme-match {
-  margin-top: 16px;
-  padding: 12px 14px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--surface);
-}
-
-.tm-head {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  margin-bottom: 10px;
-}
-
-.tm-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.15);
-}
-
-.tm-name { font-size: 13px; font-weight: 700; color: var(--ink); }
-.tm-tag { font-size: 11px; color: var(--muted); }
-
-.tm-row { display: flex; flex-wrap: wrap; gap: 7px; }
-
-.tm-chip {
-  width: 26px;
-  height: 26px;
-  padding: 0;
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  cursor: pointer;
-  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.05);
-  transition: transform 0.12s ease;
-}
-
-.tm-chip:hover { transform: scale(1.12); }
-
 /* ---- pick button (mirrors all-in-one's Add to Chrome button) ---- */
 .pick-btn {
   width: 100%;
