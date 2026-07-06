@@ -62,6 +62,8 @@ Part of the Codigrate tools family, alongside the in-browser
 <a href="https://codigrate.com/tools/gradient">gradient</a> tools.
 </p>
 
+<!-- codigrate-readme-footer -->
+
 ## Contributing
 
 Issues and suggestions are welcome. Open an issue on this repository, or reach us at [info@codigrate.com](mailto:info@codigrate.com).
