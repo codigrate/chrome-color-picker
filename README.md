@@ -52,6 +52,8 @@ A fast, simple eyedropper for your browser. Pick any color on your screen and co
 | `manifest.json` | MV3 manifest (action popup, `storage`) |
 | `popup.html` / `popup.css` / `popup.js` | the popup UI and logic |
 | `images/` | toolbar / store icons and the footer logo |
+| `make-icons.swift` | renders the icon set from the same spectrum drop as the Mac App Store app |
+| `make-icon-svg.py` | vector build of the same drop, for codigrate.com |
 
 ---
 
