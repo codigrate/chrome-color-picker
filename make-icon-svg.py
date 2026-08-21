@@ -3,6 +3,17 @@
 
 Same geometry as macos-color-picker/make-icon.swift, converted from that file's
 y-up 1024 design space to SVG's y-down space and cropped to the drop.
+
+This is the ONE source for the drop across every Color Picker surface: the Chrome
+extension, the site's product logos, and the JetBrains plugin icon.
+
+    python3 make-icon-svg.py out.svg            # bare, scales to its container
+    python3 make-icon-svg.py out.svg --size 40  # adds width/height, for hosts
+                                                # that require a declared size
+
+JetBrains is the reason --size exists: the Marketplace asks for a 40x40
+pluginIcon.svg. The viewBox stays 580 so the artwork is identical to the other
+two platforms and still renders sharp at the larger sizes the plugin page uses.
 """
 import colorsys, math, sys
 
@@ -59,7 +70,15 @@ for i in range(STEPS):
         f'L{n(p2[0])} {n(p2[1])}Z" fill="{hexc}"/>'
     )
 
-svg = f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {VB[0]} {VB[1]}" role="img" aria-label="Color Picker">
+args = sys.argv[1:]
+size = None
+if "--size" in args:
+    i = args.index("--size")
+    size = args[i + 1]
+    del args[i:i + 2]
+sizeAttr = f' width="{size}" height="{size}"' if size else ""
+
+svg = f'''<svg xmlns="http://www.w3.org/2000/svg"{sizeAttr} viewBox="0 0 {VB[0]} {VB[1]}" role="img" aria-label="Color Picker">
 <defs>
 <clipPath id="cp-clip"><path d="{inner}"/></clipPath>
 <radialGradient id="cp-depth" gradientUnits="userSpaceOnUse" cx="{n(centroid[0])}" cy="{n(centroid[1])}" r="300">
@@ -83,6 +102,6 @@ svg = f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {VB[0]} {VB[1]}" 
 </svg>
 '''
 
-out = sys.argv[1] if len(sys.argv) > 1 else "color-picker-drop.svg"
+out = args[0] if args else "color-picker-drop.svg"
 open(out, "w").write(svg)
 print("wrote", out, len(svg), "bytes")
