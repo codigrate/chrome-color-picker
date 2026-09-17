@@ -1,15 +1,14 @@
 'use strict';
 
 // Codigrate Color Picker popup. Uses the native EyeDropper API to sample any
-// pixel on screen, then reads the colour the way the Codigrate Color Picker for
-// JetBrains does: copy-ready CSS, WCAG / APCA contrast, channel bars, every
-// common colour space, harmonies, tints / shades / tones, temperature, colour
-// vision deficiency simulations and a persisted history of recent picks.
-// All maths is ported 1:1 from the JetBrains plugin (which mirrors the website).
+// pixel on screen, then reads the colour exactly the way the Codigrate Color
+// Picker for macOS does: the same header (swatch, name, hex field, pick, copy,
+// recent colors), the same analysis sections in the same order (conversions,
+// CSS, accessibility, channels, harmony, ramps, temperature, color vision) and
+// the same formats. All maths is ported 1:1 from the macOS / JetBrains apps.
 
 const HISTORY_KEY = 'history';
 const LAST_KEY = 'last';
-const COLLAPSED_KEY = 'collapsed';
 const MAX = 12;
 const RAMP_STEPS = 10;
 
@@ -39,9 +38,8 @@ function storageSet(obj) {
 const $ = (id) => document.getElementById(id);
 const pickBtn = $('pick');
 const unsupported = $('unsupported');
-const result = $('result');
 const swatch = $('swatch');
-const swatchHex = $('swatchHex');
+const hexField = $('hexField');
 const openLink = $('openCodigrate');
 const historyRow = $('historyRow');
 
@@ -201,10 +199,28 @@ function polar(a, b) {
   return [c, h];
 }
 
+// macOS hexToHsl: hue rounded, saturation and lightness to one decimal.
+function hslDec(hex) {
+  let [r, g, b] = hexToRgb(hex);
+  r /= 255; g /= 255; b /= 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+  let h = 0;
+  if (d !== 0) {
+    if (mx === r) { h = ((g - b) / d) % 6; }
+    else if (mx === g) { h = (b - r) / d + 2; }
+    else { h = (r - g) / d + 4; }
+  }
+  h = Math.round(h * 60);
+  if (h < 0) { h += 360; }
+  const l = (mx + mn) / 2;
+  const sat = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+  return [h, round(sat * 100, 1), round(l * 100, 1)];
+}
+
 const fmt = {
   rgb: (hex) => { const [r, g, b] = hexToRgb(hex); return `rgb(${r}, ${g}, ${b})`; },
   rgbPct: (hex) => { const [r, g, b] = hexToRgb(hex); return `rgb(${Math.round(r / 255 * 100)}%, ${Math.round(g / 255 * 100)}%, ${Math.round(b / 255 * 100)}%)`; },
-  hsl: (hex) => { const h = hslOf(hex); return `hsl(${h[0]}, ${h[1]}%, ${h[2]}%)`; },
+  hsl: (hex) => { const h = hslDec(hex); return `hsl(${h[0]}, ${h[1]}%, ${h[2]}%)`; },
   hsv: (hex) => { const h = hsvOf(hex); return `hsv(${h[0]}, ${h[1]}%, ${h[2]}%)`; },
   hwb: (hex) => {
     const [r, g, b] = hexToRgb(hex).map((v) => v / 255);
@@ -216,13 +232,13 @@ const fmt = {
   binary: (hex) => hexToRgb(hex).map((v) => v.toString(2).padStart(8, '0')).join(' '),
   oklab: (hex) => { const o = oklabOf(hex); return `oklab(${num(round(o[0], 3))} ${num(round(o[1], 3))} ${num(round(o[2], 3))})`; },
   oklch: (hex) => { const o = oklabOf(hex); const [c, h] = polar(o[1], o[2]); return `oklch(${num(round(o[0], 3))} ${num(round(c, 3))} ${num(round(h, 1))})`; },
-  lab: (hex) => { const l = labOf(hex); return `lab(${num(round(l[0], 3))} ${num(round(l[1], 3))} ${num(round(l[2], 3))})`; },
+  lab: (hex) => { const l = labOf(hex); return `lab(${num(round(l[0], 2))} ${num(round(l[1], 2))} ${num(round(l[2], 2))})`; },
   lch: (hex) => { const l = labOf(hex); const [c, h] = polar(l[1], l[2]); return `lch(${num(round(l[0], 2))} ${num(round(c, 2))} ${num(round(h, 1))})`; },
-  xyz: (hex) => { const x = xyzOf(hex); return `xyz(${num(round(x[0], 3))}, ${num(round(x[1], 3))}, ${num(round(x[2], 3))})`; },
+  xyz: (hex) => { const x = xyzOf(hex); return `${num(round(x[0] * 100, 3))}, ${num(round(x[1] * 100, 3))}, ${num(round(x[2] * 100, 3))}`; },
   yxy: (hex) => {
     const [x, y, z] = xyzOf(hex).map((v) => v * 100);
     const sum = (x + y + z) || 1;
-    return `yxy(${num(round(y, 2))}, ${num(round(x / sum, 4))}, ${num(round(y / sum, 4))})`;
+    return `${num(round(y, 2))}, ${num(round(x / sum, 4))}, ${num(round(y / sum, 4))}`;
   },
   hunter: (hex) => {
     const [x, y, z] = xyzOf(hex).map((v) => v * 100);
@@ -390,45 +406,36 @@ function el(tag, cls, text) {
   return n;
 }
 
-function copy(text, row) {
+// Copy, then flash the row's value as "Copied" for 0.9s (macOS CopyRow).
+function copyFlash(text, node, valueEl) {
   navigator.clipboard.writeText(text).then(() => {
-    const hint = row.querySelector('.copy-hint');
-    if (hint) {
-      hint.textContent = 'Copied';
-      row.classList.add('copied');
-      setTimeout(() => { hint.textContent = 'Copy'; row.classList.remove('copied'); }, 900);
-    }
+    const prev = valueEl.textContent;
+    valueEl.textContent = 'Copied';
+    node.classList.add('copied');
+    setTimeout(() => { valueEl.textContent = prev; node.classList.remove('copied'); }, 900);
   });
 }
 
-// A key / value row that copies its value on click (ConvRow).
-function copyRow(key, value) {
-  const row = el('button', 'val');
+function copyRow(label, value) {
+  const row = el('button', 'row');
   row.type = 'button';
-  row.appendChild(el('span', 'k', key));
-  row.appendChild(el('span', 'v', value));
-  row.appendChild(el('span', 'copy-hint', 'Copy'));
-  row.addEventListener('click', () => copy(value, row));
+  row.appendChild(el('span', 'k', label));
+  const v = el('span', 'v', value);
+  row.appendChild(v);
+  row.title = value;
+  row.addEventListener('click', () => copyFlash(value, row, v));
   return row;
 }
 
-const groupHeader = (title) => el('div', 'group-head', title);
-
-// A titled strip of colour chips; clicking a chip loads that colour (ChipStrip).
-function chipStrip(title, colors, note) {
-  const wrap = el('div', 'strip');
-  const head = el('div', 'strip-head');
-  head.appendChild(el('span', 'strip-title', title));
-  if (note) { head.appendChild(el('span', 'strip-note', note)); }
-  wrap.appendChild(head);
-  const row = el('div', 'h-row');
-  colors.forEach((hex) => row.appendChild(chip(hex)));
-  wrap.appendChild(row);
-  return wrap;
+function group(title, rows) {
+  const g = el('div', 'group');
+  g.appendChild(el('div', 'sec-title', title));
+  rows.forEach((r) => g.appendChild(r));
+  return g;
 }
 
-function chip(hex, cls) {
-  const c = el('button', 'chip' + (cls ? ' ' + cls : ''));
+function chip(hex) {
+  const c = el('button', 'chip');
   c.type = 'button';
   c.style.background = hex;
   c.title = hex;
@@ -436,189 +443,185 @@ function chip(hex, cls) {
   return c;
 }
 
-// A channel bar (ChannelBar): label, filled track, value.
-function channelBar(label, display, pct, tint) {
-  const row = el('div', 'bar-row');
-  row.appendChild(el('span', 'bar-label', label));
+// A titled ChipStrip; `kind` = 'tall' (26px, harmony) or '' (22px).
+function strip(title, colors, kind) {
+  const wrap = el('div', 'strip');
+  wrap.appendChild(el('div', 'strip-title', title));
+  const row = el('div', 'chips' + (kind ? ' ' + kind : ''));
+  colors.forEach((h) => row.appendChild(chip(h)));
+  wrap.appendChild(row);
+  return wrap;
+}
+
+function bar(label, frac, value, fillColor) {
+  const row = el('div', 'bar');
+  row.appendChild(el('span', 'bar-k', label));
   const track = el('div', 'bar-track');
   const fill = el('div', 'bar-fill');
-  fill.style.width = Math.max(0, Math.min(100, pct)) + '%';
-  fill.style.background = tint;
+  fill.style.width = (Math.max(0, Math.min(1, frac)) * 100) + '%';
+  fill.style.background = fillColor;
   track.appendChild(fill);
   row.appendChild(track);
-  row.appendChild(el('span', 'bar-value', display));
+  row.appendChild(el('span', 'bar-v', value));
   return row;
 }
 
-// A contrast row (ContrastRow): "Aa" sample, ratio and the three badges.
-function contrastRow(title, text, surface) {
-  const row = el('div', 'a11y-row');
+// macOS AccessibilitySection row: Aa sample, label, ratio, WCAG badge, Lc.
+function a11yRow(label, text, bg) {
+  const row = el('div', 'a11y');
   const sample = el('span', 'a11y-sample', 'Aa');
+  sample.style.background = bg;
   sample.style.color = text;
-  sample.style.background = surface;
   row.appendChild(sample);
-  const body = el('div', 'a11y-body');
-  const top = el('div', 'a11y-top');
-  top.appendChild(el('span', 'a11y-title', title));
-  const ratio = contrastRatio(text, surface);
-  top.appendChild(el('span', 'a11y-ratio', ratio.toFixed(2) + ':1'));
-  body.appendChild(top);
-  const badges = el('div', 'a11y-badges');
-  const n = normalTextLevel(ratio), l = largeTextLevel(ratio);
-  const lc = apcaContrast(text, surface), al = apcaLevel(lc);
-  badges.appendChild(el('span', 'badge lv-' + n, 'Normal · ' + n));
-  badges.appendChild(el('span', 'badge lv-' + l, 'Large · ' + l));
-  badges.appendChild(el('span', 'badge lv-' + (al === 'Fail' ? 'Fail' : al === 'Body text' ? 'AAA' : 'AA'), 'APCA Lc ' + lc + ' · ' + al));
-  body.appendChild(badges);
-  row.appendChild(body);
-  row.title = 'Text ' + text + ' on ' + surface;
+  row.appendChild(el('span', 'a11y-label', label));
+  const ratio = contrastRatio(text, bg);
+  row.appendChild(el('span', 'a11y-ratio', num(round(ratio, 2)) + ':1'));
+  const level = normalTextLevel(ratio);
+  row.appendChild(el('span', 'badge ' + (level === 'Fail' ? 'fail' : 'ok'), level));
+  row.appendChild(el('span', 'a11y-lc', 'Lc ' + Math.abs(apcaContrast(text, bg))));
+  row.title = 'Text ' + text + ' on ' + bg;
   return row;
 }
 
-function fill(container, nodes) {
-  container.textContent = '';
-  nodes.forEach((n) => container.appendChild(n));
+function fill(id, nodes) {
+  const c = $(id);
+  c.textContent = '';
+  nodes.forEach((n) => c.appendChild(n));
 }
 
-// ---- render (ColorPickerPanel.show) -------------------------------------------
+// "endless-galaxy" -> "Endless Galaxy" (macOS ColorReference.name).
+function colorName(hex) {
+  const raw = COLOR_NAMES[hex.slice(1).toUpperCase()];
+  if (!raw) { return ''; }
+  return raw.split(/[- ]/).map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+
+// ---- render (macOS RootView + AnalysisSections) --------------------------------
+
+let current = '';
 
 function show(hex) {
   hex = hex.toUpperCase();
+  current = hex;
   const [r, g, b] = hexToRgb(hex);
   swatch.style.background = hex;
-  swatchHex.textContent = hex;
-  swatchHex.style.color = relativeLuminance(hex) > 0.5 ? '#0F172A' : '#FFFFFF';
+  hexField.value = hex;
+  $('colorName').textContent = colorName(hex);
 
-  fill($('cssRows'), [
-    copyRow('Color', `color: ${hex};`),
-    copyRow('Background', `background-color: ${hex};`),
-    copyRow('Border', `border: 2px solid ${hex};`),
-    copyRow('Text Shadow', `text-shadow: 2px 2px 4px ${hex};`),
-    copyRow('Box Shadow', `box-shadow: 0 8px 24px rgba(${r}, ${g}, ${b}, 0.5);`),
+  const hsl = hslDec(hex), hsv = hsvOf(hex), cmyk = cmykOf(hex);
+  const [X, Y, Z] = xyzOf(hex);
+  fill('conversions', [
+    group('Web & sRGB', [
+      copyRow('HEX', hex),
+      copyRow('RGB', fmt.rgb(hex)),
+      copyRow('RGB %', fmt.rgbPct(hex)),
+      copyRow('Web-Safe', webSafe(hex)),
+      copyRow('Decimal', fmt.decimal(hex)),
+      copyRow('Octal', fmt.octal(hex)),
+      copyRow('Binary', fmt.binary(hex)),
+    ]),
+    group('Hue-Based', [
+      copyRow('HSL', fmt.hsl(hex)),
+      copyRow('HSV', fmt.hsv(hex)),
+      copyRow('HWB', fmt.hwb(hex)),
+    ]),
+    group('Perceptual', [
+      copyRow('OKLCH', fmt.oklch(hex)),
+      copyRow('OKLab', fmt.oklab(hex)),
+      copyRow('CIE-LAB', fmt.lab(hex)),
+      copyRow('CIE-LCH', fmt.lch(hex)),
+    ]),
+    group('Print', [
+      copyRow('CMYK', fmt.cmyk(hex)),
+      copyRow('RAL', nearestRal(hex)),
+    ]),
+    group('CIE', [
+      copyRow('XYZ', fmt.xyz(hex)),
+      copyRow('Yxy', fmt.yxy(hex)),
+      copyRow('Hunter Lab', fmt.hunter(hex)),
+    ]),
   ]);
 
-  const complement = rotateHue(hex, 180);
-  fill($('a11yRows'), [
-    contrastRow('On white', hex, '#FFFFFF'),
-    contrastRow('White on it', '#FFFFFF', hex),
-    contrastRow('On black', hex, '#000000'),
-    contrastRow('Black on it', '#000000', hex),
-    contrastRow('On its complement', hex, complement),
-    contrastRow('Complement on it', complement, hex),
+  fill('cssRows', [
+    copyRow('color', `color: ${hex};`),
+    copyRow('background', `background-color: ${hex};`),
+    copyRow('border', `border: 1px solid ${hex};`),
+    copyRow('rgb', `color: rgb(${r}, ${g}, ${b});`),
+    copyRow('hsl', `color: hsl(${hsl[0]}, ${hsl[1]}%, ${hsl[2]}%);`),
   ]);
 
-  const hsl = hslOf(hex), hsv = hsvOf(hex), cmyk = cmykOf(hex);
-  const hueTint = `hsl(${hsl[0]}, 70%, 45%)`;
-  fill($('channels'), [
-    groupHeader('RGB'),
-    channelBar('R', String(r), r / 255 * 100, '#D6493F'),
-    channelBar('G', String(g), g / 255 * 100, '#3AA35E'),
-    channelBar('B', String(b), b / 255 * 100, '#3A74E0'),
-    groupHeader('HSL'),
-    channelBar('H', hsl[0] + '°', hsl[0] / 360 * 100, hueTint),
-    channelBar('S', hsl[1] + '%', hsl[1], hex),
-    channelBar('L', hsl[2] + '%', hsl[2], `hsl(0, 0%, ${hsl[2]}%)`),
-    groupHeader('HSV'),
-    channelBar('H', hsv[0] + '°', hsv[0] / 360 * 100, hueTint),
-    channelBar('S', hsv[1] + '%', hsv[1], hex),
-    channelBar('V', hsv[2] + '%', hsv[2], `hsl(0, 0%, ${hsv[2]}%)`),
-    groupHeader('CMYK'),
-    channelBar('C', cmyk[0] + '%', cmyk[0], '#0B9FD8'),
-    channelBar('M', cmyk[1] + '%', cmyk[1], '#D6338E'),
-    channelBar('Y', cmyk[2] + '%', cmyk[2], '#E0B926'),
-    channelBar('K', cmyk[3] + '%', cmyk[3], '#1F2937'),
+  const comp = rotateHue(hex, 180);
+  fill('a11yRows', [
+    a11yRow('On White', hex, '#FFFFFF'),
+    a11yRow('White On', '#FFFFFF', hex),
+    a11yRow('On Black', hex, '#000000'),
+    a11yRow('Black On', '#000000', hex),
+    a11yRow('On Complement', hex, comp),
+    a11yRow('Complement On', comp, hex),
   ]);
 
-  fill($('convRows'), [
-    groupHeader('Web & sRGB'),
-    copyRow('Hex', hex),
-    copyRow('RGB', fmt.rgb(hex)),
-    copyRow('RGB %', fmt.rgbPct(hex)),
-    copyRow('Web-Safe', webSafe(hex)),
-    copyRow('Decimal', fmt.decimal(hex)),
-    copyRow('Octal', fmt.octal(hex)),
-    copyRow('Binary', fmt.binary(hex)),
-    groupHeader('Hue-Based'),
-    copyRow('HSL', fmt.hsl(hex)),
-    copyRow('HSV', fmt.hsv(hex)),
-    copyRow('HWB', fmt.hwb(hex)),
-    groupHeader('Perceptual & Wide Gamut'),
-    copyRow('OKLCH', fmt.oklch(hex)),
-    copyRow('OKLab', fmt.oklab(hex)),
-    copyRow('CIE-LAB', fmt.lab(hex)),
-    copyRow('CIE-LCH', fmt.lch(hex)),
-    groupHeader('Print'),
-    copyRow('CMYK', fmt.cmyk(hex)),
-    copyRow('RAL', nearestRal(hex)),
-    groupHeader('CIE Tristimulus'),
-    copyRow('XYZ', fmt.xyz(hex)),
-    copyRow('Yxy', fmt.yxy(hex)),
-    copyRow('Hunter Lab', fmt.hunter(hex)),
+  fill('channels', [
+    bar('R', r / 255, String(r), '#FF3B30'),
+    bar('G', g / 255, String(g), '#34C759'),
+    bar('B', b / 255, String(b), '#007AFF'),
+    bar('H', hsl[0] / 360, Math.round(hsl[0]) + '°', fromHsl(hsl[0], 100, 50)),
+    bar('S', hsl[1] / 100, Math.round(hsl[1]) + '%', '#8E8E93'),
+    bar('L', hsl[2] / 100, Math.round(hsl[2]) + '%', '#8E8E93'),
+    bar('V', hsv[2] / 100, hsv[2] + '%', '#8E8E93'),
+    bar('C', cmyk[0] / 100, cmyk[0] + '%', '#32ADE6'),
+    bar('M', cmyk[1] / 100, cmyk[1] + '%', '#FF00FF'),
+    bar('Y', cmyk[2] / 100, cmyk[2] + '%', '#FFCC00'),
+    bar('K', cmyk[3] / 100, cmyk[3] + '%', '#000000'),
   ]);
 
-  const verdict = isWarm(hex) ? 'Warm' : 'Cool';
-  fill($('harmony'), [
-    chipStrip('Analogous', analogousTrio(hex)),
-    chipStrip('Monochrome', monochromeTrio(hex)),
-    chipStrip('Complementary', [hex, complement]),
-    chipStrip('Split Complementary', [hex, rotateHue(hex, 150), rotateHue(hex, 210)]),
-    chipStrip('Triadic', [hex, rotateHue(hex, 120), rotateHue(hex, 240)]),
-    chipStrip('Tetradic', [hex, rotateHue(hex, 60), complement, rotateHue(hex, 240)]),
-    chipStrip('Temperature', [hex], verdict),
+  fill('harmony', [
+    strip('Complementary', [hex, comp], 'tall'),
+    strip('Analogous', analogousTrio(hex), 'tall'),
+    strip('Monochrome', monochromeTrio(hex), 'tall'),
+    strip('Split Complementary', [hex, rotateHue(hex, 150), rotateHue(hex, 210)], 'tall'),
+    strip('Triadic', [hex, rotateHue(hex, 120), rotateHue(hex, 240)], 'tall'),
+    strip('Tetradic', [hex, rotateHue(hex, 60), comp, rotateHue(hex, 240)], 'tall'),
   ]);
 
-  fill($('ramps'), [
-    chipStrip('Tints', ramp(hex, '#FFFFFF', RAMP_STEPS)),
-    chipStrip('Shades', ramp(hex, '#000000', RAMP_STEPS)),
-    chipStrip('Tones', ramp(hex, '#808080', RAMP_STEPS)),
+  fill('ramps', [
+    strip('Tints', ramp(hex, '#FFFFFF', RAMP_STEPS)),
+    strip('Shades', ramp(hex, '#000000', RAMP_STEPS)),
+    strip('Tones', ramp(hex, '#808080', RAMP_STEPS)),
   ]);
 
-  fill($('temperature'), [
-    el('p', 'verdict', 'On the warm to cool axis this color reads ' + verdict),
-    chipStrip('Warmer', warmer(hex, RAMP_STEPS)),
-    chipStrip('Cooler', cooler(hex, RAMP_STEPS)),
+  fill('temperature', [
+    el('p', 'verdict', 'On the warm to cool axis this color reads ' + (isWarm(hex) ? 'warm' : 'cool') + '.'),
+    strip('Warmer', warmer(hex, RAMP_STEPS)),
+    strip('Cooler', cooler(hex, RAMP_STEPS)),
   ]);
 
-  const cvdNodes = [];
-  CVD_GROUPS.forEach(([group, types]) => {
-    cvdNodes.push(groupHeader(group));
-    types.forEach(([name, type, anomalize]) => {
-      const sim = cvdSimulate(hex, type, anomalize);
-      const row = el('div', 'cvd-row');
-      const pair = el('div', 'cvd-pair');
-      const base = el('span', 'chip cvd-base');
-      base.style.background = hex;
-      base.title = hex;
-      pair.appendChild(base);
-      pair.appendChild(chip(sim, 'cvd-sim'));
-      row.appendChild(pair);
-      const text = el('div', 'cvd-text');
-      text.appendChild(el('span', 'cvd-name', name));
-      text.appendChild(el('span', 'cvd-hex', sim));
-      row.appendChild(text);
-      cvdNodes.push(row);
-    });
+  const cvdRows = [
+    ['Protanomaly', 'protan', true], ['Deuteranomaly', 'deutan', true], ['Tritanomaly', 'tritan', true], ['Achromatomaly', 'achroma', true],
+    ['Protanopia', 'protan', false], ['Deuteranopia', 'deutan', false], ['Tritanopia', 'tritan', false], ['Achromatopsia', 'achroma', false],
+  ].map(([name, type, anomalize]) => {
+    const sim = cvdSimulate(hex, type, anomalize);
+    const row = el('button', 'cvd');
+    row.type = 'button';
+    const c = el('span', 'cvd-chip');
+    c.style.background = sim;
+    row.appendChild(c);
+    row.appendChild(el('span', 'cvd-name', name));
+    const v = el('span', 'cvd-hex', sim);
+    row.appendChild(v);
+    row.addEventListener('click', () => copyFlash(sim, row, v));
+    return row;
   });
-  fill($('cvd'), cvdNodes);
+  fill('cvd', cvdRows);
 
-  openLink.href = 'https://codigrate.com/tools/color/' + hex.slice(1);
-  result.classList.remove('hidden');
+  openLink.href = 'https://codigrate.com/tools/color/' + hex.slice(1).toLowerCase();
 }
 
 function renderHistory(list) {
   historyRow.textContent = '';
-  if (!list || !list.length) {
-    historyRow.appendChild(el('span', 'empty', 'No colors picked yet'));
-    return;
-  }
-  list.forEach((hex) => {
-    const c = el('button', 'chip');
-    c.type = 'button';
-    c.style.background = hex;
-    c.title = hex;
-    c.addEventListener('click', () => show(hex));
-    historyRow.appendChild(c);
-  });
+  const box = $('recents');
+  if (!list || !list.length) { box.classList.add('hidden'); return; }
+  box.classList.remove('hidden');
+  list.forEach((hex) => historyRow.appendChild(chip(hex)));
 }
 
 // ---- storage ----------------------------------------------------------------
@@ -634,23 +637,6 @@ function addHistory(hex) {
     renderHistory(list);
   });
 }
-
-// Collapsible sections: the state persists like the JetBrains tool window's.
-let collapsed = {};
-function applyCollapsed() {
-  document.querySelectorAll('.sec').forEach((sec) => {
-    sec.classList.toggle('collapsed', !!collapsed[sec.dataset.sec]);
-  });
-}
-
-document.querySelectorAll('.sec-head').forEach((head) => {
-  head.addEventListener('click', () => {
-    const key = head.parentElement.dataset.sec;
-    collapsed[key] = !collapsed[key];
-    storageSet({ [COLLAPSED_KEY]: collapsed });
-    applyCollapsed();
-  });
-});
 
 // ---- actions ----------------------------------------------------------------
 
@@ -669,15 +655,32 @@ async function pick() {
   }
 }
 
+// The hex field: type or paste a color and press Enter (macOS onSubmit).
+function submitHex() {
+  let v = hexField.value.trim().replace(/^#/, '');
+  if (/^[0-9a-f]{3}$/i.test(v)) { v = v.split('').map((c) => c + c).join(''); }
+  if (!/^[0-9a-f]{6}$/i.test(v)) { hexField.value = current; return; }
+  const hex = '#' + v.toUpperCase();
+  show(hex);
+  addHistory(hex);
+}
+
 // ---- wire up ----------------------------------------------------------------
 
 pickBtn.addEventListener('click', pick);
+hexField.addEventListener('keydown', (e) => { if (e.key === 'Enter') { submitHex(); } });
+hexField.addEventListener('blur', submitHex);
+$('copyHex').addEventListener('click', () => {
+  const btn = $('copyHex');
+  navigator.clipboard.writeText(current).then(() => {
+    btn.classList.add('copied');
+    setTimeout(() => btn.classList.remove('copied'), 900);
+  });
+});
 
-storageGet([HISTORY_KEY, LAST_KEY, COLLAPSED_KEY], (data) => {
-  collapsed = data[COLLAPSED_KEY] || {};
-  applyCollapsed();
+storageGet([HISTORY_KEY, LAST_KEY], (data) => {
   renderHistory(data[HISTORY_KEY] || []);
-  if (data[LAST_KEY]) { show(data[LAST_KEY]); }
+  show(data[LAST_KEY] || '#3F4494');
 });
 
 loadThemeMatch();

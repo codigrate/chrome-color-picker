@@ -5,63 +5,102 @@
 <title>Color Picker store screenshot</title>
 <link rel="stylesheet" href="../popup.css">
 <style>
-  /* 1280x800 Web Store screenshot: flat #EEF2F8 page, one soft circle behind
-     the visual, left copy + drop icon, right the REAL popup (popup.html + css + js). */
+  /* 1280x800 Web Store screenshot, the Chrome twin of the macOS app's store shot:
+     a Chrome window showing the same tangerine, the REAL popup (popup.html + css + js)
+     dropped from the toolbar icon. ?view=top | channels | explore scrolls the popup. */
   html, body { margin: 0; width: 1280px; height: 800px; overflow: hidden; }
-  body { width: 1280px; background: #EEF2F8; font-family: Arial, sans-serif; position: relative; }
-  .circle { position: absolute; left: 820px; top: -110px; width: 620px; height: 620px; border-radius: 50%; background: #E3E9F4; }
-  .copy { position: absolute; left: 120px; top: 240px; width: 560px; }
-  .copy img { width: 72px; height: 72px; display: block; margin-bottom: 20px; }
-  .copy h2 { margin: 0; font-size: 54px; line-height: 1.12; font-weight: 800; color: #0F172A; letter-spacing: -0.01em; }
-  .copy p { margin: 22px 0 0; font-size: 22px; line-height: 1.5; color: #334155; }
-  .shot { position: absolute; left: 860px; top: 100px; width: 340px; height: 600px; border-radius: 14px; overflow: hidden;
-          background: #F8FAFC; box-shadow: 0 18px 48px rgba(15, 23, 42, 0.14), 0 0 0 1px rgba(15, 23, 42, 0.06); }
-  .shot .container { max-height: 600px; overflow: hidden; }
-  .shot .h-row .chip { cursor: default; }
-  body.popup-only { background: transparent; width: 420px; height: 670px; }
-  body.popup-only .circle, body.popup-only .copy { display: none; }
-  body.popup-only .shot { left: 40px; top: 30px; }
+  body { position: relative; background: #DEE1E6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; }
+
+  /* tab strip */
+  .tabs { position: absolute; left: 0; top: 0; width: 1280px; height: 40px; background: #DEE1E6; }
+  .lights { position: absolute; left: 12px; top: 14px; display: flex; gap: 8px; }
+  .lights i { width: 12px; height: 12px; border-radius: 50%; display: block; }
+  .tab { position: absolute; left: 80px; top: 8px; height: 32px; width: 240px; background: #FFFFFF; border-radius: 8px 8px 0 0;
+         display: flex; align-items: center; gap: 8px; padding: 0 12px; font-size: 12px; color: #202124; }
+  .tab .fav { width: 16px; height: 16px; border-radius: 4px; background: #FC7108; }
+  .tab .x { margin-left: auto; color: #5F6368; font-size: 13px; }
+  .newtab { position: absolute; left: 330px; top: 14px; color: #5F6368; font-size: 20px; line-height: 20px; }
+
+  /* toolbar */
+  .toolbar { position: absolute; left: 0; top: 40px; width: 1280px; height: 44px; background: #FFFFFF; border-bottom: 1px solid #DADCE0;
+         display: flex; align-items: center; padding: 0 10px; gap: 6px; }
+  .nav { display: flex; gap: 2px; }
+  .nav i, .tools i { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; }
+  .nav svg, .tools svg { width: 18px; height: 18px; fill: none; stroke: #5F6368; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .omni { flex: 1; height: 30px; margin: 0 8px; background: #F1F3F4; border-radius: 15px; display: flex; align-items: center; gap: 8px; padding: 0 12px; font-size: 13px; color: #202124; }
+  .omni svg { width: 14px; height: 14px; fill: none; stroke: #5F6368; stroke-width: 1.8; }
+  .omni .host { color: #202124; }
+  .omni .path { color: #5F6368; }
+  .tools { display: flex; align-items: center; gap: 2px; }
+  .tools .ext { width: 28px; height: 28px; border-radius: 50%; background: #E8EAED; display: grid; place-items: center; }
+  .tools .ext img { width: 16px; height: 16px; }
+  .tools .avatar { width: 24px; height: 24px; border-radius: 50%; background: #3F4494; color: #fff; font-size: 11px; font-weight: 700; display: grid; place-items: center; margin: 0 4px; }
+
+  /* page */
+  .page { position: absolute; left: 0; top: 85px; width: 1280px; height: 715px; overflow: hidden; }
+  .page img { position: absolute; left: 0; top: -96px; width: 1300px; height: 813px; }
+
+  /* the popup, dropped from the extension icon */
+  .shot { position: absolute; left: 890px; top: 86px; width: 344px; height: 600px; transform: scale(0.78); transform-origin: top left;
+          border-radius: 8px; overflow: hidden; background: #F8FAFC;
+          box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12), 0 8px 24px rgba(0, 0, 0, 0.22); }
+  .shot .panel { height: 600px; }
+  /* ?view=popup: the popup alone on a transparent page (codigrate.com hero image) */
+  body.popup-only { width: 364px; height: 620px; background: transparent; }
+  body.popup-only .tabs, body.popup-only .toolbar, body.popup-only .page { display: none; }
+  body.popup-only .shot { left: 10px; top: 10px; transform: none; box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.08), 0 6px 20px rgba(15, 23, 42, 0.12); }
+  .shot .analysis { scrollbar-width: none; }
+  .shot .analysis::-webkit-scrollbar { display: none; }
 </style>
 </head>
 <body>
-<div class="circle"></div>
-<div class="copy">
-  <img src="../images/icon128.png" alt="">
-  <h2>Grab any color,<br>read it every way.</h2>
-  <p>Eyedrop anything on screen. Copy-ready CSS, contrast checks, every color space, harmonies and more. By Codigrate.</p>
+<div class="tabs">
+  <div class="lights"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i></div>
+  <div class="tab"><span class="fav"></span>Codigrate Tangerine<span class="x">✕</span></div>
+  <div class="newtab">+</div>
 </div>
+<div class="toolbar">
+  <div class="nav">
+    <i><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></i>
+    <i><svg viewBox="0 0 24 24" style="opacity:.4"><path d="M9 5l7 7-7 7"/></svg></i>
+    <i><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg></i>
+  </div>
+  <div class="omni">
+    <svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+    <span class="host">codigrate.com</span><span class="path">/themes/autumn/tangerine.png</span>
+  </div>
+  <div class="tools">
+    <i><svg viewBox="0 0 24 24"><path d="M12 3l1.8 5.5H19l-4.6 3.4 1.8 5.6L12 14l-4.2 3.5 1.8-5.6L5 8.5h5.2z"/></svg></i>
+    <span class="ext"><img src="../images/icon16.png" alt=""></span>
+    <i><svg viewBox="0 0 24 24"><path d="M10 4h4v3a2 2 0 0 0 4 0h2v4h-3a2 2 0 0 0 0 4h3v5H4V4h3a2 2 0 0 1 4 0z"/></svg></i>
+    <span class="avatar">F</span>
+    <i><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></i>
+  </div>
+</div>
+<div class="page"><img src="tangerine-bg.webp" alt=""></div>
 <div class="shot" id="shot"></div>
 <script>
   // Pull the real popup markup in, so the screenshot never drifts from the product.
   fetch('../popup.html').then(r => r.text()).then(html => {
     const doc = new DOMParser().parseFromString(html, 'text/html');
-    document.getElementById('shot').appendChild(doc.querySelector('.container'));
-    const s1 = document.createElement('script'); s1.src = '../ral-classic.js';
-    s1.onload = () => {
-      const s2 = document.createElement('script'); s2.src = '../popup.js';
-      s2.onload = () => {
+    document.getElementById('shot').appendChild(doc.querySelector('.panel'));
+    const load = (src) => new Promise((res) => { const s = document.createElement('script'); s.src = src; s.onload = res; document.body.appendChild(s); });
+    load('../ral-classic.js').then(() => load('../color-names.js')).then(() => load('../popup.js')).then(() => {
+      show('#FC7108');
+      renderHistory(['#FC7108', '#EA7B31', '#DD5A27', '#E66A2D', '#E5662A', '#E9863A', '#E2682B', '#E2632A', '#E98137', '#E4712D']);
+      // ?view=top: conversions. ?view=channels: accessibility + channels. ?view=explore: harmony + ramps.
+      const view = new URLSearchParams(location.search).get('view') || 'top';
+      const a = document.querySelector('.shot .analysis');
+      const to = (id) => { a.scrollTop = document.getElementById(id).parentElement.offsetTop - a.offsetTop - 14; };
+      if (view === 'popup') {
+        document.body.classList.add('popup-only');
         show('#3F4494');
-        renderHistory(['#3F4494', '#12B39E', '#E8703F', '#5AC8B8', '#F5B301', '#1FA1E6']);
-        // ?view=conversions: fold the first sections so the section list AND the
-        // Conversions rows are in frame. ?view=explore: scroll to Harmony and below.
-        const view = new URLSearchParams(location.search).get('view') || 'top';
-        if (view === 'popup') {
-          document.body.classList.add('popup-only');
-          ['css', 'accessibility', 'channels'].forEach(k => document.querySelector('.sec[data-sec=' + k + ']').classList.add('collapsed'));
-        }
-        if (view === 'conversions') {
-          ['css', 'accessibility', 'channels'].forEach(k => document.querySelector('.sec[data-sec=' + k + ']').classList.add('collapsed'));
-        }
-        if (view === 'explore') {
-          ['css', 'accessibility', 'channels', 'conversions'].forEach(k => document.querySelector('.sec[data-sec=' + k + ']').classList.add('collapsed'));
-          const c = document.querySelector('.shot .container');
-          c.scrollTop = document.querySelector('.sec[data-sec=harmony]').offsetTop - 16;
-        }
-        document.body.dataset.ready = '1';
-      };
-      document.body.appendChild(s2);
-    };
-    document.body.appendChild(s1);
+        renderHistory(['#3F4494', '#4D63E0', '#8F92B8', '#6B6EA6', '#8A93D6', '#2F3A8C', '#2E6FA6', '#5DA5E8', '#7CB6EC', '#9AC7F1']);
+      }
+      if (view === 'channels') { to('a11yRows'); }
+      if (view === 'explore') { to('harmony'); }
+      document.body.dataset.ready = '1';
+    });
   });
 </script>
 </body>
