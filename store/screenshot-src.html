@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Color Picker store screenshot</title>
+<link rel="stylesheet" href="../popup.css">
+<style>
+  /* 1280x800 Web Store screenshot: flat #EEF2F8 page, one soft circle behind
+     the visual, left copy + drop icon, right the REAL popup (popup.html + css + js). */
+  html, body { margin: 0; width: 1280px; height: 800px; overflow: hidden; }
+  body { width: 1280px; background: #EEF2F8; font-family: Arial, sans-serif; position: relative; }
+  .circle { position: absolute; left: 820px; top: -110px; width: 620px; height: 620px; border-radius: 50%; background: #E3E9F4; }
+  .copy { position: absolute; left: 120px; top: 240px; width: 560px; }
+  .copy img { width: 72px; height: 72px; display: block; margin-bottom: 20px; }
+  .copy h2 { margin: 0; font-size: 54px; line-height: 1.12; font-weight: 800; color: #0F172A; letter-spacing: -0.01em; }
+  .copy p { margin: 22px 0 0; font-size: 22px; line-height: 1.5; color: #334155; }
+  .shot { position: absolute; left: 840px; top: 105px; width: 380px; height: 590px; border-radius: 14px; overflow: hidden;
+          background: #F8FAFC; box-shadow: 0 18px 48px rgba(15, 23, 42, 0.14), 0 0 0 1px rgba(15, 23, 42, 0.06); }
+  .shot .container { max-height: 590px; overflow: hidden; }
+  .shot .h-row .chip { cursor: default; }
+  body.popup-only { background: transparent; width: 460px; height: 660px; }
+  body.popup-only .circle, body.popup-only .copy { display: none; }
+  body.popup-only .shot { left: 40px; top: 30px; }
+</style>
+</head>
+<body>
+<div class="circle"></div>
+<div class="copy">
+  <img src="../images/icon128.png" alt="">
+  <h2>Grab any color,<br>read it every way.</h2>
+  <p>Eyedrop anything on screen. Copy-ready CSS, contrast checks, every color space, harmonies and more. By Codigrate.</p>
+</div>
+<div class="shot" id="shot"></div>
+<script>
+  // Pull the real popup markup in, so the screenshot never drifts from the product.
+  fetch('../popup.html').then(r => r.text()).then(html => {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    document.getElementById('shot').appendChild(doc.querySelector('.container'));
+    const s1 = document.createElement('script'); s1.src = '../ral-classic.js';
+    s1.onload = () => {
+      const s2 = document.createElement('script'); s2.src = '../popup.js';
+      s2.onload = () => {
+        show('#3F4494');
+        renderHistory(['#3F4494', '#12B39E', '#E8703F', '#5AC8B8', '#F5B301', '#1FA1E6']);
+        // ?view=conversions: fold the first sections so the section list AND the
+        // Conversions rows are in frame. ?view=explore: scroll to Harmony and below.
+        const view = new URLSearchParams(location.search).get('view') || 'top';
+        if (view === 'popup') {
+          document.body.classList.add('popup-only');
+          ['css', 'accessibility', 'channels'].forEach(k => document.querySelector('.sec[data-sec=' + k + ']').classList.add('collapsed'));
+        }
+        if (view === 'conversions') {
+          ['css', 'accessibility', 'channels'].forEach(k => document.querySelector('.sec[data-sec=' + k + ']').classList.add('collapsed'));
+        }
+        if (view === 'explore') {
+          ['css', 'accessibility', 'channels', 'conversions'].forEach(k => document.querySelector('.sec[data-sec=' + k + ']').classList.add('collapsed'));
+          const c = document.querySelector('.shot .container');
+          c.scrollTop = document.querySelector('.sec[data-sec=harmony]').offsetTop - 16;
+        }
+        document.body.dataset.ready = '1';
+      };
+      document.body.appendChild(s2);
+    };
+    document.body.appendChild(s1);
+  });
+</script>
+</body>
+</html>
