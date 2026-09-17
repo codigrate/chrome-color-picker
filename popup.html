@@ -9,7 +9,7 @@
 <body>
 <div class="container">
   <h1>Color Picker</h1>
-  <p class="subtle">Pick any color on your screen with the eyedropper, then copy it as HEX, RGB or HSL.</p>
+  <p class="subtle">Pick any color on your screen with the eyedropper, then read it in every color space, check its contrast and explore its harmonies.</p>
 
   <button id="pick" class="pick-btn" type="button">
     <svg class="ic" viewBox="0 0 24 24" aria-hidden="true">
@@ -24,35 +24,68 @@
   </p>
 
   <section id="result" class="result hidden">
-    <div class="swatch" id="swatch"></div>
+    <div class="swatch" id="swatch"><span class="swatch-hex" id="swatchHex"></span></div>
 
-    <div class="values">
-      <button class="val" type="button" data-key="hex">
-        <span class="k">HEX</span>
-        <span class="v" id="hex"></span>
-        <span class="copy-hint">Copy</span>
-      </button>
-      <button class="val" type="button" data-key="rgb">
-        <span class="k">RGB</span>
-        <span class="v" id="rgb"></span>
-        <span class="copy-hint">Copy</span>
-      </button>
-      <button class="val" type="button" data-key="hsl">
-        <span class="k">HSL</span>
-        <span class="v" id="hsl"></span>
-        <span class="copy-hint">Copy</span>
-      </button>
-    </div>
+    <!-- Every section below mirrors the Codigrate Color Picker for JetBrains:
+         same titles, same rows, same order. Headers toggle the body; the
+         collapsed state persists in chrome.storage.local. -->
+    <section class="sec" data-sec="css">
+      <button class="sec-head" type="button"><span class="arrow"></span>CSS</button>
+      <p class="sec-tip">The color as copy-ready CSS: text, fill, border and shadows. Click a row to copy it.</p>
+      <div class="sec-body" id="cssRows"></div>
+    </section>
+
+    <section class="sec" data-sec="accessibility">
+      <button class="sec-head" type="button"><span class="arrow"></span>Accessibility</button>
+      <p class="sec-tip">WCAG 2 contrast ratio and APCA (WCAG 3) of the color as text on common surfaces and its complementary, both directions. AA needs 4.5:1 normal / 3:1 large; AAA 7:1 / 4.5:1.</p>
+      <div class="sec-body" id="a11yRows"></div>
+    </section>
+
+    <section class="sec" data-sec="channels">
+      <button class="sec-head" type="button"><span class="arrow"></span>Color Channels</button>
+      <p class="sec-tip">The screen (RGB, HSL, HSV) and print (CMYK) channel mix for this color.</p>
+      <div class="sec-body" id="channels"></div>
+    </section>
+
+    <section class="sec" data-sec="conversions">
+      <button class="sec-head" type="button"><span class="arrow"></span>Conversions</button>
+      <p class="sec-tip">The color across every common color space. Click a row to copy it.</p>
+      <div class="sec-body" id="convRows"></div>
+    </section>
+
+    <section class="sec" data-sec="harmony">
+      <button class="sec-head" type="button"><span class="arrow"></span>Harmony</button>
+      <p class="sec-tip">Harmonies built from this color on the color wheel. Click a chip to load it.</p>
+      <div class="sec-body" id="harmony"></div>
+    </section>
+
+    <section class="sec" data-sec="ramps">
+      <button class="sec-head" type="button"><span class="arrow"></span>Tints, Shades &amp; Tones</button>
+      <p class="sec-tip">A tint adds white, a shade adds black, a tone adds gray. Click a step to load it.</p>
+      <div class="sec-body" id="ramps"></div>
+    </section>
+
+    <section class="sec" data-sec="temperature">
+      <button class="sec-head" type="button"><span class="arrow"></span>Temperature</button>
+      <p class="sec-tip">Where the color sits on the warm to cool axis. Its warmer and cooler neighbours follow.</p>
+      <div class="sec-body" id="temperature"></div>
+    </section>
+
+    <section class="sec" data-sec="cvd">
+      <button class="sec-head" type="button"><span class="arrow"></span>Color Vision Deficiency</button>
+      <p class="sec-tip">How this color is perceived under each color vision deficiency. Each pair shows the color and its simulation; click the simulation to load it.</p>
+      <div class="sec-body" id="cvd"></div>
+    </section>
 
     <a id="openCodigrate" class="link cdg-link" target="_blank" rel="noopener">
-      Open in Codigrate
+      Explore in Codigrate Color Tool
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"
         fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </a>
   </section>
 
   <section class="history">
-    <div class="info-title">Recents</div>
+    <div class="info-title">Recent Colors</div>
     <div id="historyRow" class="h-row"></div>
   </section>
 
@@ -65,6 +98,7 @@
   </div>
 </div>
 
+<script src="ral-classic.js"></script>
 <script src="popup.js"></script>
 </body>
 </html>

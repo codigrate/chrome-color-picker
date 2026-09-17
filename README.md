@@ -9,7 +9,7 @@ Color Picker by Codigrate
 </h1>
 
 <p align="center">
-A fast, simple eyedropper for your browser. Pick any color on your screen and copy it as HEX, RGB or HSL, right from your toolbar.
+An eyedropper for your browser with the full Codigrate color toolkit behind it. Pick any color on your screen and read it in every color space, check its contrast and explore its harmonies, right from your toolbar.
 </p>
 
 <p align="center">
@@ -28,8 +28,14 @@ A fast, simple eyedropper for your browser. Pick any color on your screen and co
 ## Features
 
 - **Eyedrop anywhere.** Sample any pixel on your screen: a web page, an image, a video, a design tool, anything you can see.
-- **HEX, RGB and HSL.** Every color in all three formats, with one click to copy the one you need.
-- **Recent colors.** Your last picks stay in the popup, so the shades you are working with are always one click away.
+- **Copy-ready CSS.** Color, background, border, text shadow and box shadow rules, one click to copy.
+- **Accessibility.** WCAG 2 contrast ratio and APCA (WCAG 3) of the color as text on white, black and its complement, both directions, with AA / AAA verdicts.
+- **Color channels.** RGB, HSL, HSV and CMYK channel bars.
+- **Every color space.** Hex, RGB, RGB %, web-safe, decimal, octal, binary, HSL, HSV, HWB, OKLCH, OKLab, CIE-LAB, CIE-LCH, CMYK, the nearest RAL Classic code, XYZ, Yxy and Hunter Lab, each one click to copy.
+- **Harmony.** Analogous, monochrome, complementary, split complementary, triadic and tetradic chips built on the color wheel; click a chip to load it.
+- **Tints, shades and tones, warmer and cooler.** Ten-step ramps toward white, black and gray, and along the warm to cool axis.
+- **Color vision deficiency.** How the color reads under protan, deutan, tritan and monochromacy, both the -omaly and the -opia forms.
+- **Recent colors.** Your last twelve picks stay in the popup, so the shades you are working with are always one click away.
 - **Open in Codigrate.** Send any color straight to the [Codigrate color tool](https://codigrate.com/tools/color) for shades, harmony and contrast.
 - **Matches your theme.** With the [All In One Themes](https://chromewebstore.google.com/detail/iekicoldppmopekekolhdoofncnhhbeh) extension installed, the picker tints itself to your active Codigrate browser theme.
 
@@ -50,7 +56,8 @@ A fast, simple eyedropper for your browser. Pick any color on your screen and co
 | File | Purpose |
 |---|---|
 | `manifest.json` | MV3 manifest (action popup, `storage`) |
-| `popup.html` / `popup.css` / `popup.js` | the popup UI and logic |
+| `popup.html` / `popup.css` / `popup.js` | the popup UI and logic (the same sections as the Codigrate Color Picker for JetBrains, with the same math) |
+| `ral-classic.js` | the 216 RAL Classic colors used for the nearest-RAL match |
 | `images/` | toolbar / store icons and the footer logo |
 | `make-icons.swift` | renders the icon set from the same spectrum drop as the Mac App Store app |
 | `make-icon-svg.py` | vector build of the same drop, for codigrate.com |
