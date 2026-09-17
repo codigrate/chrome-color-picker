@@ -67,7 +67,7 @@ h1 { margin: 0; font-size: 20px; font-weight: 800; color: var(--ink); }
 .hidden { display: none !important; }
 
 .swatch {
-  height: 96px;
+  height: 84px;
   border-radius: 12px;
   border: 1px solid var(--border);
   box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.04);
@@ -182,8 +182,8 @@ h1 { margin: 0; font-size: 20px; font-weight: 800; color: var(--ink); }
 }
 
 /* ---- JetBrains-parity sections -------------------------------------------- */
-body { width: 380px; }
-.container { max-height: 590px; overflow-y: auto; }
+body { width: 340px; }
+.container { max-height: 600px; overflow-y: auto; padding: 14px 16px; }
 
 .swatch { position: relative; }
 .swatch-hex {
@@ -197,7 +197,7 @@ body { width: 380px; }
   opacity: 0.85;
 }
 
-.sec { margin-top: 16px; }
+.sec { margin-top: 13px; }
 
 .sec-head {
   display: flex;
@@ -234,7 +234,7 @@ body { width: 380px; }
   line-height: 1.45;
 }
 
-.sec-body { margin-top: 8px; display: flex; flex-direction: column; gap: 7px; }
+.sec-body { margin-top: 7px; display: flex; flex-direction: column; gap: 5px; }
 
 .group-head {
   margin-top: 4px;
@@ -244,23 +244,25 @@ body { width: 380px; }
   color: var(--muted);
 }
 
-.val .k { flex: 0 0 74px; }
-.val .v { font-size: 12px; word-break: break-all; }
+.val { padding: 7px 10px; gap: 8px; }
+.val .k { flex: 0 0 68px; font-size: 10.5px; }
+.val .v { font-size: 11.5px; word-break: break-all; }
+.copy-hint { font-size: 10.5px; }
 
 /* accessibility rows */
 .a11y-row {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 10px;
+  padding: 6px 10px;
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--surface);
 }
 
 .a11y-sample {
-  flex: 0 0 40px;
-  height: 40px;
+  flex: 0 0 36px;
+  height: 36px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -303,5 +305,6 @@ body { width: 380px; }
 .cvd-name { font-size: 12px; font-weight: 700; color: var(--ink); }
 .cvd-hex { font-family: 'SF Mono', ui-monospace, Menlo, Consolas, monospace; font-size: 11px; color: var(--muted); }
 
-/* ten ramp / temperature steps on one row: 10 × 28px + 9 × 6px = 334px < 348px */
-.strip .h-row { gap: 6px; }
+/* ten ramp / temperature steps on one row: 10 × 26px + 9 × 5px = 305px < 308px */
+.strip .h-row { gap: 5px; }
+.strip .chip, .cvd-row .chip { width: 26px; height: 26px; }
